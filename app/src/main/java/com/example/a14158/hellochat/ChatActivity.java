@@ -14,6 +14,7 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
@@ -40,6 +41,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -59,26 +63,31 @@ public class ChatActivity extends BaseActivity {
     private String c_name;
     private String outputImage_path;
     private Uri imageUri;
+    private ServerSocket serverSocket;
+    private int serverport = 3601;
+    private Socket socket;
     public static final int TAKE_PHOTO = 1;
     public static final int CHOOSE_PHOTO = 2;
 
+    private Handler handler;
+
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
         ActionBar actionBar = getSupportActionBar();
         actionBar.hide();
         c_name = getIntent().getStringExtra("name");//获得联系人的昵称
-        TextView name_title = (TextView)findViewById(R.id.hello_chat);
+        TextView name_title = (TextView) findViewById(R.id.hello_chat);
         name_title.setText(c_name);//设置聊天界面头部昵称显示
-        dbHelper = new MsgDatabaseHelper(this,"MSG_RECORD.db",null,1);
+        dbHelper = new MsgDatabaseHelper(this, "MSG_RECORD.db", null, 1);
         initMsgs();
 
-        inputText = (EditText)findViewById(R.id.input_text);
-        send = (Button)findViewById(R.id.send_button);
-        add = (Button)findViewById(R.id.add_button);
+        inputText = (EditText) findViewById(R.id.input_text);
+        send = (Button) findViewById(R.id.send_button);
+        add = (Button) findViewById(R.id.add_button);
 
-        msgRecyclerView = (RecyclerView)findViewById(R.id.mag_recycler_view);
+        msgRecyclerView = (RecyclerView) findViewById(R.id.mag_recycler_view);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         msgRecyclerView.setLayoutManager(linearLayoutManager);
 
@@ -87,16 +96,47 @@ public class ChatActivity extends BaseActivity {
         send.setOnClickListener(this);
         add.setOnClickListener(this);
 
-        if (getIntent().getIntExtra("photo_ok",0) == PHOTO_OK){//如果相等说明在PhotoActivity中点击了确认发送
+        if (getIntent().getIntExtra("photo_ok", 0) == PHOTO_OK) {//如果相等说明在PhotoActivity中点击了确认发送
             //更新界面的消息列表。显示最新消息
             String photo_path = getIntent().getStringExtra("photo_path");
-            Msg msg = new Msg(Msg.PIC_MSG,"",photo_path,Msg.TYPE_SENDED, getImageId("凌晨%七点半"));
+            Msg msg = new Msg(Msg.PIC_MSG, "", photo_path, Msg.TYPE_SENDED, getImageId("凌晨%七点半"));
             msgList.add(msg);
-            adapter.notifyItemInserted(msgList.size()-1);
-            msgRecyclerView.scrollToPosition(msgList.size()-1);
+            adapter.notifyItemInserted(msgList.size() - 1);
+            msgRecyclerView.scrollToPosition(msgList.size() - 1);
 
-            insertMsg(c_name,Msg.PIC_MSG,null,photo_path,getImageId("凌晨%七点半"),Msg.TYPE_SENDED);//在数据库中插入最新的图片消息
+            insertMsg(c_name, Msg.PIC_MSG, null, photo_path, getImageId("凌晨%七点半"), Msg.TYPE_SENDED);//在数据库中插入最新的图片消息
         }
+
+        handler = new Handler(){
+            public void handleMessage(android.os.Message msg){
+                String content = msg.obj.toString();
+                Msg mMsg = new Msg(Msg.TEXT_MSG,content,"",Msg.TYPE_RECEIVED,getImageId(c_name));
+                msgList.add(mMsg);
+                adapter.notifyItemInserted(msgList.size()-1);
+                msgRecyclerView.scrollToPosition(msgList.size()-1);
+
+                insertMsg(c_name,Msg.TEXT_MSG,content,null,getImageId(c_name),Msg.TYPE_RECEIVED);
+            }
+        };
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    serverSocket = new ServerSocket(serverport, 100, InetAddress.getByName("192.168.137.37"));
+                    //serverSocket.setSoTimeout(0);
+                    while (true) {
+                        Socket socket = serverSocket.accept();
+                        /*Message msg = new Message();
+                        msg.obj = "client connected \n";
+                        handler.sendMessage(msg);*/
+                        new Thread(new SocketThread(socket, handler)).start();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }) .start();
     }
 
     private int getImageId(String c_name) {
@@ -116,8 +156,9 @@ public class ChatActivity extends BaseActivity {
                             adapter.notifyItemInserted(msgList.size() - 1);//当有新消息时，刷新RecyclerView中的显示
                             msgRecyclerView.scrollToPosition(msgList.size() - 1);//定位到最后一行
                             inputText.setText("");
-
                             insertMsg(c_name,Msg.TEXT_MSG,input,null,getImageId("凌晨%七点半"),Msg.TYPE_SENDED);
+
+                            new Thread(new SendThread(socket,input)).start();
                         }
                         break;
             case R.id.add_button:
