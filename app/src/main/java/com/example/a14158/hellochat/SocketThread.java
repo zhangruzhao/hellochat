@@ -19,11 +19,9 @@ class SocketThread implements Runnable {
         this.socket = socket;
         this.handler = handler;
     }
-
     @Override
     public void run() {
         String rmsg = "";
-
         try {
             final InputStream inputStream = socket.getInputStream();
             final OutputStream outputSteam = socket.getOutputStream();
@@ -31,8 +29,8 @@ class SocketThread implements Runnable {
             int len = -1;
             while ((len = inputStream.read(buffer))!= -1){
                 String data = new String(buffer,0,len);
-                rmsg = "Server received\n";
-                outputSteam.write(rmsg.getBytes());
+                //rmsg = "Server received\n";
+                //outputSteam.write(rmsg.getBytes());
                 Message msg = new Message();
                 msg.obj = socket.getRemoteSocketAddress().toString() + ":" + data + "\n";
                 handler.sendMessage(msg);

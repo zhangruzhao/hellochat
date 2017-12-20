@@ -9,10 +9,13 @@ import org.litepal.crud.DataSupport;
 public class Contact extends DataSupport{
     private String name;
     private int imageId;
-    public Contact(String name, int imageId){
-        this.name = name;
-        this.imageId = imageId;
-    }
+    private int IsChatting;
+    private String group;
+    public static int Chatting = 1;
+    public static int notChatting = 0;
+
+    public void setGroup(String group){this.group = group;}
+    public void setIsChatting(int status){this.IsChatting = status;}
     public void setName(String name){
         this.name = name;
     }
@@ -22,7 +25,10 @@ public class Contact extends DataSupport{
     public String getName(){
         return name;
     }
+    public String getGroup(){return group;}
     public int getImageId(){
         return imageId;
     }
+    public int getIsChatting(){return IsChatting;}
+
 }

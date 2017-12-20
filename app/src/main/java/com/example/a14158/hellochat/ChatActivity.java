@@ -37,6 +37,8 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.litepal.crud.DataSupport;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -77,7 +79,8 @@ public class ChatActivity extends BaseActivity {
         setContentView(R.layout.activity_chat);
         ActionBar actionBar = getSupportActionBar();
         actionBar.hide();
-        c_name = getIntent().getStringExtra("name");//获得联系人的昵称
+        //c_name = getIntent().getStringExtra("name");//获得联系人的昵称
+        c_name = getChattingName();
         TextView name_title = (TextView) findViewById(R.id.hello_chat);
         name_title.setText(c_name);//设置聊天界面头部昵称显示
         dbHelper = new MsgDatabaseHelper(this, "MSG_RECORD.db", null, 1);
@@ -99,12 +102,12 @@ public class ChatActivity extends BaseActivity {
         if (getIntent().getIntExtra("photo_ok", 0) == PHOTO_OK) {//如果相等说明在PhotoActivity中点击了确认发送
             //更新界面的消息列表。显示最新消息
             String photo_path = getIntent().getStringExtra("photo_path");
-            Msg msg = new Msg(Msg.PIC_MSG, "", photo_path, Msg.TYPE_SENDED, getImageId("凌晨%七点半"));
+            Msg msg = new Msg(Msg.PIC_MSG, "", photo_path, Msg.TYPE_SENDED, R.drawable.im_15);
             msgList.add(msg);
             adapter.notifyItemInserted(msgList.size() - 1);
             msgRecyclerView.scrollToPosition(msgList.size() - 1);
-
-            insertMsg(c_name, Msg.PIC_MSG, null, photo_path, getImageId("凌晨%七点半"), Msg.TYPE_SENDED);//在数据库中插入最新的图片消息
+            //在数据库中插入最新的图片消息
+            insertMsg(c_name, Msg.PIC_MSG, null, photo_path, R.drawable.im_15, Msg.TYPE_SENDED);
         }
 
         handler = new Handler(){
@@ -118,18 +121,16 @@ public class ChatActivity extends BaseActivity {
                 insertMsg(c_name,Msg.TEXT_MSG,content,null,getImageId(c_name),Msg.TYPE_RECEIVED);
             }
         };
-
         new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
                     serverSocket = new ServerSocket(serverport, 100, InetAddress.getByName("192.168.137.37"));
-                    //serverSocket.setSoTimeout(0);
                     while (true) {
                         Socket socket = serverSocket.accept();
-                        /*Message msg = new Message();
-                        msg.obj = "client connected \n";
-                        handler.sendMessage(msg);*/
+                        //Message msg = new Message();
+                        //msg.obj = "client connected \n";
+                        //handler.sendMessage(msg);
                         new Thread(new SocketThread(socket, handler)).start();
                     }
                 } catch (IOException e) {
@@ -138,9 +139,18 @@ public class ChatActivity extends BaseActivity {
             }
         }) .start();
     }
-
+    //根据CONTACT表的中IsChatting列来获取当前打开聊天窗口的联系人昵称
+    private String getChattingName() {
+        List<Contact> contacts = DataSupport
+                                .where("IsChatting = ?","1")
+                                .find(Contact.class);
+        return contacts.get(0).getName();
+    }
+    //根据CONTACT表汇总的name
     private int getImageId(String c_name) {
-        List<Contact> contacts = Contact.where("name == ? ",c_name).find(Contact.class);
+        List<Contact> contacts = Contact
+                                .where("name = ? ",c_name)
+                                .find(Contact.class);
         Log.d("ChatActivity","contacts.get(0).getImageId()");
         return contacts.get(0).getImageId();
     }
@@ -151,12 +161,12 @@ public class ChatActivity extends BaseActivity {
             case R.id.send_button:
                         String input = inputText.getText().toString();
                         if(!"".equals(input)){
-                            Msg msg = new Msg(Msg.TEXT_MSG,input,"",Msg.TYPE_SENDED, getImageId("凌晨%七点半"));
+                            Msg msg = new Msg(Msg.TEXT_MSG,input,"",Msg.TYPE_SENDED, R.drawable.im_15);
                             msgList.add(msg);
                             adapter.notifyItemInserted(msgList.size() - 1);//当有新消息时，刷新RecyclerView中的显示
                             msgRecyclerView.scrollToPosition(msgList.size() - 1);//定位到最后一行
                             inputText.setText("");
-                            insertMsg(c_name,Msg.TEXT_MSG,input,null,getImageId("凌晨%七点半"),Msg.TYPE_SENDED);
+                            insertMsg(c_name,Msg.TEXT_MSG,input,null,R.drawable.im_15,Msg.TYPE_SENDED);
 
                             new Thread(new SendThread(socket,input)).start();
                         }
@@ -239,11 +249,13 @@ public class ChatActivity extends BaseActivity {
     public boolean onContextItemSelected(MenuItem item) {
         int position = adapter.getPosition();
         switch (item.getItemId()){
+            //点击保存照片
             case R.id.save_picture:
                 Msg msg = msgList.get(position);
                 String imagePath = msg.getPhoto_path();
                 saveBitmap(imagePath);
                 break;
+            //点击删除（文本或照片）
             case R.id.delete:
                 deleteMsg(position);
                 msgList.remove(position);
@@ -332,7 +344,7 @@ public class ChatActivity extends BaseActivity {
     private  void initMsgs(){//初始化消息记录
         Msg msg1 = new Msg(Msg.TEXT_MSG,"你好","",Msg.TYPE_RECEIVED,getImageId(c_name));
         msgList.add(msg1);
-        Msg msg2 = new Msg(Msg.TEXT_MSG,"你好……","",Msg.TYPE_SENDED, getImageId("凌晨%七点半"));
+        Msg msg2 = new Msg(Msg.TEXT_MSG,"你好……","",Msg.TYPE_SENDED, R.drawable.im_15);
         msgList.add(msg2);
         //insertMsg(c_name,Msg.TEXT_MSG,"你好，GG？","",getImageId(c_name),Msg.TYPE_RECEIVED);
         //insertMsg(c_name,Msg.TEXT_MSG,"是的，你呢？","",getImageId("凌晨%七点半"),Msg.TYPE_SENDED);
@@ -348,6 +360,7 @@ public class ChatActivity extends BaseActivity {
                 String photo_path = cursor.getString(cursor.getColumnIndex("photo_path"));//图片路径
                 int type = cursor.getInt(cursor.getColumnIndex("type"));//消息类型发送或者接收
                 int imageId  = cursor.getInt(cursor.getColumnIndex("imageId"));//联系人的头像
+                //将查询活动结果添加到界面显示的消息队列中
                 Msg msg0 = new Msg(Msg_Type,content,photo_path,type,imageId);
                 msgList.add(msg0);
             }while (cursor.moveToNext());
@@ -358,8 +371,10 @@ public class ChatActivity extends BaseActivity {
         Msg msg = msgList.get(position);//position为当前聊天窗口的recyclerview中的item位置
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         if (msg.getMSG_TYPE() == Msg.PIC_MSG){//如果是图片，选择图片路径作为删除条件
+            //db.execSQL("delete from MSG where photo_path = ?",new String[]{msg.getPhoto_path()});
             db.delete("MSG","photo_path = ?",new String[]{msg.getPhoto_path()});
         }else if(msg.getMSG_TYPE() == Msg.TEXT_MSG){//如果是文本，选择文本内容为删除条件
+            //db.execSQL("delete from MSG where content = ?",new String[]{msg.getContent()});
             db.delete("MSG","content = ?",new String[]{msg.getContent()});
         }
 
