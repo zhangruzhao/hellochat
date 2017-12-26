@@ -4,5 +4,6 @@
     <version value = "1"/>
     <list>
         <mapping class = "com.example.a14158.hellochat.Contact"/>
+        <mapping class="com.example.a14158.hellochat.ContactGroup"/>
     </list>
 </litepal>

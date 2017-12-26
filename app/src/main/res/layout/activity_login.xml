@@ -4,14 +4,22 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
-
-    <com.example.a14158.hellochat.TitleLayout
+    <android.support.v7.widget.Toolbar
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:layout_height="?attr/actionBarSize"
+        android:id="@+id/toolbar_login"
+        android:background="@color/coloraaaa"
+        app:title="好友列表"
+        app:titleTextColor="#ffffff"
+        ></android.support.v7.widget.Toolbar>
 
-    <ListView
+    <ExpandableListView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:id="@+id/list_view">
-    </ListView>
+        android:id="@+id/expandableListView"
+        android:childDivider="@color/colorPrimary"
+        android:groupIndicator="@null"
+        android:dividerHeight="1dp">
+
+    </ExpandableListView>
 </LinearLayout>

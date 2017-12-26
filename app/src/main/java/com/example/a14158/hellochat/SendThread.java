@@ -26,7 +26,7 @@ class SendThread implements Runnable {
             Log.d("SendThread","send");
             //socket = new Socket("10.116.32.181",9999);
             socket = new Socket();
-            socket.connect(new InetSocketAddress("192.168.137.190",3601),10000);
+            socket.connect(new InetSocketAddress("192.168.137.78",3601),10000);
             OutputStream outputStream = socket.getOutputStream();
             outputStream.write(input.getBytes());
         } catch (SocketTimeoutException e){

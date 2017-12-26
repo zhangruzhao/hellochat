@@ -21,7 +21,6 @@ public class PhotoActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_photo);
-        getSupportActionBar().hide();
         ImageView picture = (ImageView)findViewById(R.id.picture_imageView);
         Button cancel = (Button)findViewById(R.id.photo_cancel_button);
         cancel.setOnClickListener(new View.OnClickListener() {

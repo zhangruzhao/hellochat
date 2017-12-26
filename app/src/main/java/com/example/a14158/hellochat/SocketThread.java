@@ -32,7 +32,7 @@ class SocketThread implements Runnable {
                 //rmsg = "Server received\n";
                 //outputSteam.write(rmsg.getBytes());
                 Message msg = new Message();
-                msg.obj = socket.getRemoteSocketAddress().toString() + ":" + data + "\n";
+                msg.obj = data + "\n";
                 handler.sendMessage(msg);
             }
         } catch (IOException e) {

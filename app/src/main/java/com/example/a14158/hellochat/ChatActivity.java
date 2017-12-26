@@ -21,7 +21,6 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
-import android.support.v7.app.ActionBar;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -77,8 +76,7 @@ public class ChatActivity extends BaseActivity {
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
-        ActionBar actionBar = getSupportActionBar();
-        actionBar.hide();
+
         //c_name = getIntent().getStringExtra("name");//获得联系人的昵称
         c_name = getChattingName();
         TextView name_title = (TextView) findViewById(R.id.hello_chat);
@@ -125,7 +123,7 @@ public class ChatActivity extends BaseActivity {
             @Override
             public void run() {
                 try {
-                    serverSocket = new ServerSocket(serverport, 100, InetAddress.getByName("192.168.137.37"));
+                    serverSocket = new ServerSocket(serverport, 100, InetAddress.getByName("192.168.137.147"));
                     while (true) {
                         Socket socket = serverSocket.accept();
                         //Message msg = new Message();
@@ -144,6 +142,7 @@ public class ChatActivity extends BaseActivity {
         List<Contact> contacts = DataSupport
                                 .where("IsChatting = ?","1")
                                 .find(Contact.class);
+        Log.d("ChatActivity",contacts.get(0).getName());
         return contacts.get(0).getName();
     }
     //根据CONTACT表汇总的name

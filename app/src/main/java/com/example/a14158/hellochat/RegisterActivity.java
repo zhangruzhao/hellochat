@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -22,6 +23,15 @@ public class RegisterActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
 
+        Toolbar toolbar_register = (Toolbar)findViewById(R.id.toolbar_register);
+        setSupportActionBar(toolbar_register);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        toolbar_register.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
         editText_1 = (EditText)findViewById(R.id.edit_username_1);
         editText_2 = (EditText)findViewById(R.id.edit_password_1);
         editText_3 = (EditText)findViewById(R.id.confirm_pass_edit);

@@ -2,7 +2,6 @@ package com.example.a14158.hellochat;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
@@ -34,9 +33,9 @@ public class TitleLayout extends LinearLayout implements View.OnClickListener {
                 ((Activity) getContext()).finish();
                 break;
             case R.id.edit_button:
-                //ActivityCollector.finishAll();
-                Intent intent = new Intent("com.example.broadcastbestpractice.FORCE_OFFLINE");
-                getContext().sendBroadcast(intent);
+                ActivityCollector.finishAll();
+                //Intent intent = new Intent("com.example.broadcastbestpractice.FORCE_OFFLINE");
+                //getContext().sendBroadcast(intent);
                 break;
             default:
                 break;
